@@ -9,6 +9,7 @@ class TOVACache(DynamicCache):
     def __init__(self, cache_size: int):
         super().__init__()
         self.cache_size = cache_size
+        self.saved_input_indices: List[torch.Tensor] = []
 
     def get_seq_length(self, layer_idx: Optional[int] = 0) -> int:
         """Returns the sequence length of the cached states. A layer index can be optionally passed."""
@@ -27,6 +28,30 @@ class TOVACache(DynamicCache):
         """Returns the maximum sequence length of the cached states."""
         # We add one because this function is used to determain the attention mask which should be 1 more than the cache size in generation mode.
         return self.cache_size + 1
+    
+    def update(
+        self,
+        key_states: torch.Tensor,
+        value_states: torch.Tensor,
+        layer_idx: int,
+        cache_kwargs: Optional[Dict[str, Any]] = None,
+        position_ids: torch.LongTensor = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        # Update the number of seen tokens
+        if layer_idx == 0:
+            self.seen_tokens += key_states.shape[-2]
+
+        # Update the cache
+        if len(self.key_cache) <= layer_idx:
+            self.key_cache.append(key_states)
+            self.value_cache.append(value_states)
+            self.saved_input_indices.append(position_ids)
+        else:
+            self.key_cache[layer_idx] = torch.cat([self.key_cache[layer_idx], key_states], dim=-2)
+            self.value_cache[layer_idx] = torch.cat([self.value_cache[layer_idx], value_states], dim=-2)
+            self.saved_input_indices[layer_idx] = torch.cat([self.saved_input_indices[layer_idx], position_ids])
+
+        return self.key_cache[layer_idx], self.value_cache[layer_idx], self.saved_input_indices[layer_idx]
 
     def reduce(
         self,
@@ -49,3 +74,4 @@ class TOVACache(DynamicCache):
         # Reduce the size of the cache to self.cache_size
         self.key_cache[layer_idx] = torch.gather(self.key_cache[layer_idx], dim=2, index=expand_ind)
         self.value_cache[layer_idx] = torch.gather(self.value_cache[layer_idx], dim=2, index=expand_ind)
+        self.saved_input_indices[layer_idx] = torch.gather(self.saved_input_indices[layer_idx], dim=0, index=expand_ind)
