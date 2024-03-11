@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from torch import nn
 
 from transformers.cache_utils import Cache
-from transformers.models.mistral.modeling_mistral import apply_rotary_pos_emb, apply_rotary_pos_emb, repeat_kv
+from transformers.models.mistral.modeling_mistral import apply_rotary_pos_emb, repeat_kv
 
 
 
@@ -44,12 +44,14 @@ def tova_mistral_attention_forward(
                 "with a layer index."
             )
         kv_seq_len += past_key_value.get_usable_length(kv_seq_len, self.layer_idx)
-    cos, sin = self.rotary_emb(value_states, seq_len=position_ids[0, -1].item()+1) # changed from the original imp
-    query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
-
+    
     if past_key_value is not None:
         cache_kwargs = {"sin": sin, "cos": cos}  # Specific to RoPE models
         key_states, value_states = past_key_value.update(key_states, value_states, self.layer_idx, cache_kwargs)
+    
+    # Changed from originl - This is now done after storing in the cache, not before
+    cos, sin = self.rotary_emb(value_states, seq_len=position_ids[0, -1].item()+1) # changed from the original imp
+    query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
 
     # repeat k/v heads if n_kv_heads < n_heads
     key_states = repeat_kv(key_states, self.num_key_value_groups)
