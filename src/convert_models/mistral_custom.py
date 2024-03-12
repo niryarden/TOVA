@@ -6,8 +6,9 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from transformers.cache_utils import Cache
-from transformers.models.mistral.modeling_mistral import apply_rotary_pos_emb, repeat_kv
+from ..tova_cache import TOVACache
+from .utils import apply_rotary_pos_emb
+from transformers.models.mistral.modeling_mistral import repeat_kv
 
 
 
@@ -16,7 +17,7 @@ def tova_mistral_attention_forward(
     hidden_states: torch.Tensor,
     attention_mask: Optional[torch.Tensor] = None,
     position_ids: Optional[torch.LongTensor] = None,
-    past_key_value: Optional[Cache] = None,
+    past_key_value: Optional[TOVACache] = None,
     output_attentions: bool = False,
     use_cache: bool = False,
     **kwargs,
@@ -46,10 +47,12 @@ def tova_mistral_attention_forward(
         kv_seq_len += past_key_value.get_usable_length(kv_seq_len, self.layer_idx)
     
     cos, sin = self.rotary_emb(value_states, seq_len=position_ids[0, -1].item()+1) # changed from the original imp
+
+    position_encoding = past_key_value.position_encoder.get_positions(past_key_value, position_ids, self.layer_idx)
     if past_key_value is not None:
         cache_kwargs = {"sin": sin, "cos": cos}  # Specific to RoPE models
-        key_states, value_states, saved_input_indices = past_key_value.update(key_states, value_states, self.layer_idx, cache_kwargs, position_ids)
-    query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
+        key_states, value_states = past_key_value.update(key_states, value_states, self.layer_idx, cache_kwargs, position_ids)
+    query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids, position_encoding)
 
     # repeat k/v heads if n_kv_heads < n_heads
     key_states = repeat_kv(key_states, self.num_key_value_groups)
@@ -101,7 +104,7 @@ def tova_mistral_prepare_inputs_for_generation_generation(
 ):
     # Omit tokens covered by past_key_values
     if past_key_values is not None:
-        if isinstance(past_key_values, Cache):
+        if isinstance(past_key_values, TOVACache):
             cache_length = past_key_values.get_seq_length()
             past_length = past_key_values.seen_tokens
             max_cache_length = past_key_values.get_max_length()

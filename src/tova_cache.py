@@ -3,13 +3,19 @@ from typing import Any, Dict, List, Optional, Tuple
 import torch
 from transformers.cache_utils import DynamicCache
 
+import os
+import sys
+sys.path.insert(0, os.path.dirname(__file__) + "/position_encoding")
+from .position_encoding import PositionEncoder, BaselinePositionEncoder
+
 
 class TOVACache(DynamicCache):
 
-    def __init__(self, cache_size: int):
+    def __init__(self, cache_size: int, position_encoder: Optional[PositionEncoder] = BaselinePositionEncoder()):
         super().__init__()
         self.cache_size = cache_size
         self.saved_input_indices: List[torch.Tensor] = []
+        self.position_encoder: PositionEncoder = position_encoder
 
     def get_seq_length(self, layer_idx: Optional[int] = 0) -> int:
         """Returns the sequence length of the cached states. A layer index can be optionally passed."""
@@ -45,13 +51,13 @@ class TOVACache(DynamicCache):
         if len(self.key_cache) <= layer_idx:
             self.key_cache.append(key_states)
             self.value_cache.append(value_states)
-            self.saved_input_indices.append(position_ids)
+            self.saved_input_indices.append(position_ids[0])
         else:
             self.key_cache[layer_idx] = torch.cat([self.key_cache[layer_idx], key_states], dim=-2)
             self.value_cache[layer_idx] = torch.cat([self.value_cache[layer_idx], value_states], dim=-2)
-            self.saved_input_indices[layer_idx] = torch.cat([self.saved_input_indices[layer_idx], position_ids])
+            self.saved_input_indices[layer_idx] = torch.cat([self.saved_input_indices[layer_idx], position_ids[0]])
 
-        return self.key_cache[layer_idx], self.value_cache[layer_idx], self.saved_input_indices[layer_idx]
+        return self.key_cache[layer_idx], self.value_cache[layer_idx]
 
     def reduce(
         self,
