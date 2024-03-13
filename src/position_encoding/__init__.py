@@ -1,2 +1,2 @@
-from position_encoder import PositionEncoder
-from baseline_position_encoder import BaselinePositionEncoder
+from TOVA.src.position_encoding.position_encoding_indexes import PositionEncodingIndexes
+from TOVA.src.position_encoding.baseline_position_encoding_indexes import BaselinePositionEncodingIndexes

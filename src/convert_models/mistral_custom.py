@@ -48,11 +48,11 @@ def tova_mistral_attention_forward(
     
     cos, sin = self.rotary_emb(value_states, seq_len=position_ids[0, -1].item()+1) # changed from the original imp
 
-    position_encoding = past_key_value.position_encoder.get_positions(past_key_value, position_ids, self.layer_idx)
+    position_encoding_indexes = past_key_value.position_encoding_indexes.get_position_indexes(past_key_value, position_ids, self.layer_idx)
     if past_key_value is not None:
         cache_kwargs = {"sin": sin, "cos": cos}  # Specific to RoPE models
         key_states, value_states = past_key_value.update(key_states, value_states, self.layer_idx, cache_kwargs, position_ids)
-    query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids, position_encoding)
+    query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids, position_encoding_indexes)
 
     # repeat k/v heads if n_kv_heads < n_heads
     key_states = repeat_kv(key_states, self.num_key_value_groups)
