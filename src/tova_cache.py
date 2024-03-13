@@ -83,6 +83,4 @@ class TOVACache(DynamicCache):
         # Reduce the size of the cache to self.cache_size
         self.key_cache[layer_idx] = torch.gather(self.key_cache[layer_idx], dim=2, index=expand_ind)
         self.value_cache[layer_idx] = torch.gather(self.value_cache[layer_idx], dim=2, index=expand_ind)
-        # todo: should the self.cached_input_indices[layer_idx] have an additional dimension for
-        #       bsz? [bsz, cache_size] like key_cache/value_cache?
         self.cached_input_indices[layer_idx] = torch.gather(self.cached_input_indices[layer_idx], dim=0, index=ind[0])

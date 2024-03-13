@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from torch import nn
 
 from ..tova_cache import TOVACache
-from .utils import apply_rotary_pos_emb
+from .utils import apply_rotary_pos_emb, get_positional_encoding_indexes
 from transformers.models.mistral.modeling_mistral import repeat_kv
 
 
@@ -46,13 +46,17 @@ def tova_mistral_attention_forward(
             )
         kv_seq_len += past_key_value.get_usable_length(kv_seq_len, self.layer_idx)
     
-    cos, sin = self.rotary_emb(value_states, seq_len=position_ids[0, -1].item()+1) # changed from the original imp
-
-    position_encoding_indexes = past_key_value.position_encoding_indexes.get_position_indexes(past_key_value, position_ids, self.layer_idx)
+    # must be calculated before updating the cache
+    is_input_tokens_round = len(past_key_value.cached_input_indices) <= self.layer_idx
+    
+    # Pulling previous from KV Cache, and updating it with new token KV
     if past_key_value is not None:
-        cache_kwargs = {"sin": sin, "cos": cos}  # Specific to RoPE models
-        key_states, value_states = past_key_value.update(key_states, value_states, self.layer_idx, cache_kwargs, position_ids)
-    query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids, position_encoding_indexes)
+        key_states, value_states = past_key_value.update(key_states, value_states, self.layer_idx, {}, position_ids)
+    
+    # Calculating position encoding indexes and applying RoPE on KQ
+    query_position_indexes, key_position_indexes = get_positional_encoding_indexes(past_key_value, position_ids, self.layer_idx, is_input_tokens_round)
+    cos, sin = self.rotary_emb(value_states, seq_len=position_ids[0, -1].item()+1)
+    query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, query_position_indexes, key_position_indexes)
 
     # repeat k/v heads if n_kv_heads < n_heads
     key_states = repeat_kv(key_states, self.num_key_value_groups)
