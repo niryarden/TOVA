@@ -47,7 +47,7 @@ def tova_mistral_attention_forward(
         kv_seq_len += past_key_value.get_usable_length(kv_seq_len, self.layer_idx)
     
     # must be calculated before updating the cache
-    is_input_tokens_round = len(past_key_value.cached_input_indices) <= self.layer_idx
+    is_input_tokens_round = len(past_key_value.cached_input_indexes) <= self.layer_idx
     
     # Pulling previous from KV Cache, and updating it with new token KV
     if past_key_value is not None:

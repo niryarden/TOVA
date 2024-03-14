@@ -1,3 +1,4 @@
 from TOVA.src.position_encoding.position_encoding_indexes import PositionEncodingIndexes
 from TOVA.src.position_encoding.baseline_position_encoding_indexes import BaselinePositionEncodingIndexes
 from TOVA.src.position_encoding.continues_position_encoding_indexes import ContinuesPositionEncodingIndexes
+from TOVA.src.position_encoding.gaps_position_encoding_indexes import GapsPositionEncodingIndexes

@@ -18,7 +18,7 @@ class TOVACache(DynamicCache):
         super().__init__()
         self.cache_size = cache_size
         self.position_encoding_indexes: PositionEncodingIndexes = position_encoding_indexes
-        self.cached_input_indices: List[torch.Tensor] = []
+        self.cached_input_indexes: List[torch.Tensor] = []
 
     def get_seq_length(self, layer_idx: Optional[int] = 0) -> int:
         """Returns the sequence length of the cached states. A layer index can be optionally passed."""
@@ -54,11 +54,11 @@ class TOVACache(DynamicCache):
         if len(self.key_cache) <= layer_idx:
             self.key_cache.append(key_states)
             self.value_cache.append(value_states)
-            self.cached_input_indices.append(position_ids[0])
+            self.cached_input_indexes.append(position_ids[0])
         else:
             self.key_cache[layer_idx] = torch.cat([self.key_cache[layer_idx], key_states], dim=-2)
             self.value_cache[layer_idx] = torch.cat([self.value_cache[layer_idx], value_states], dim=-2)
-            self.cached_input_indices[layer_idx] = torch.cat([self.cached_input_indices[layer_idx], position_ids[0]])
+            self.cached_input_indexes[layer_idx] = torch.cat([self.cached_input_indexes[layer_idx], position_ids[0]])
 
         return self.key_cache[layer_idx], self.value_cache[layer_idx]
 
@@ -83,4 +83,4 @@ class TOVACache(DynamicCache):
         # Reduce the size of the cache to self.cache_size
         self.key_cache[layer_idx] = torch.gather(self.key_cache[layer_idx], dim=2, index=expand_ind)
         self.value_cache[layer_idx] = torch.gather(self.value_cache[layer_idx], dim=2, index=expand_ind)
-        self.cached_input_indices[layer_idx] = torch.gather(self.cached_input_indices[layer_idx], dim=0, index=ind[0])
+        self.cached_input_indexes[layer_idx] = torch.gather(self.cached_input_indexes[layer_idx], dim=0, index=ind[0])
