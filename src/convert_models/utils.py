@@ -31,9 +31,9 @@ def get_positional_encoding_indexes(
     if is_input_tokens_round:
         # if first run of the layer, on the original input tokens only, use position ids
         return position_ids, position_ids
-    if past_key_value.cached_input_indexes[layer_idx][-1] < context_limit:
+    if past_key_value.cached_input_indexes[layer_idx][-1].item() < context_limit - 1:
         # if the tokens indexes do not exceed the context limit, use baseline
-        key_position_indexes = past_key_value.cached_input_indices[layer_idx].detach().clone().reshape(1, -1)
+        key_position_indexes = past_key_value.cached_input_indexes[layer_idx].detach().clone().reshape(1, -1)
         query_position_indexes = key_position_indexes[0, -1].reshape(1, -1)
         return query_position_indexes, key_position_indexes
     # if the tokens indexes do exceed the context limit, use the defined method
