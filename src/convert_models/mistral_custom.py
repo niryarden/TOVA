@@ -11,6 +11,9 @@ from .utils import apply_rotary_pos_emb, get_positional_encoding_indexes
 from transformers.models.mistral.modeling_mistral import repeat_kv
 
 
+MISTRAL_CONTEXT_LIMIT = 8192
+
+
 
 def tova_mistral_attention_forward(
     self,
@@ -54,7 +57,8 @@ def tova_mistral_attention_forward(
         key_states, value_states = past_key_value.update(key_states, value_states, self.layer_idx, {}, position_ids)
     
     # Calculating position encoding indexes and applying RoPE on KQ
-    query_position_indexes, key_position_indexes = get_positional_encoding_indexes(past_key_value, position_ids, self.layer_idx, is_input_tokens_round)
+    query_position_indexes, key_position_indexes = get_positional_encoding_indexes(
+        past_key_value, position_ids, self.layer_idx, is_input_tokens_round, MISTRAL_CONTEXT_LIMIT)
     cos, sin = self.rotary_emb(value_states, seq_len=position_ids[0, -1].item()+1)
     query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, query_position_indexes, key_position_indexes)
 

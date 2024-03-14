@@ -2,7 +2,7 @@ import torch
 from TOVA.src.position_encoding.position_encoding_indexes import PositionEncodingIndexes
 
 class GapsPositionEncodingIndexes(PositionEncodingIndexes):
-    def get_position_indexes(self, past_key_value, layer_idx):
+    def get_position_indexes(self, past_key_value, layer_idx, context_limit):
         cached_indexes = past_key_value.cached_input_indexes[layer_idx]
         positions = []
         for i in range(cached_indexes.shape[-1]):

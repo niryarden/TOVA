@@ -10,6 +10,9 @@ from transformers.cache_utils import Cache
 from transformers.models.llama.modeling_llama import apply_rotary_pos_emb, apply_rotary_pos_emb, repeat_kv
 
 
+LLAMA_CONTEXT_LIMIT = 4096
+
+
 def tova_llama_attention_forward(
         self,
         hidden_states: torch.Tensor,
