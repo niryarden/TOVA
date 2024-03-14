@@ -3,7 +3,6 @@ import warnings
 import math
 
 import torch
-import torch.nn.functional as F
 from torch import nn
 
 from ..tova_cache import TOVACache
