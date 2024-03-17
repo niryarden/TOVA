@@ -6,9 +6,9 @@ from TOVA.src.position_encoding.position_encoding_indexes import PositionEncodin
 K = 10
 
 def g(x):
-    if x < K:
+    if x <= K:
         return x
-    return math.ceil(math.sqrt(x))
+    return K + math.sqrt(x - K)
 
 
 class NonLinearPositionEncodingIndexes(PositionEncodingIndexes):
@@ -19,6 +19,6 @@ class NonLinearPositionEncodingIndexes(PositionEncodingIndexes):
             i_j = cached_indexes[j].item()
             i_j_minus1 = 0 if j == 0 else cached_indexes[j - 1].item()
             p_j_minus1 = 0 if j == 0 else positions[j - 1]
-            p_j = p_j_minus1 + g(i_j - i_j_minus1)
+            p_j = p_j_minus1 + math.ceil(g(i_j - i_j_minus1))
             positions.append(p_j)
         return torch.tensor(positions, dtype=torch.int64)
