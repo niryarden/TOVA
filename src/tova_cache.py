@@ -6,19 +6,34 @@ from transformers.cache_utils import DynamicCache
 import os
 import sys
 sys.path.insert(0, os.path.dirname(__file__) + "/position_encoding")
-from .position_encoding import PositionEncodingIndexes, BaselinePositionEncodingIndexes
+from .position_encoding import *  # noqa: F403
 
 
 class TOVACache(DynamicCache):
 
     def __init__(self,
                  cache_size: int,
-                 position_encoding_indexes: Optional[PositionEncodingIndexes] = BaselinePositionEncodingIndexes()
+                 position_encoding_method: str = "baseline"
                  ):
         super().__init__()
         self.cache_size = cache_size
-        self.position_encoding_indexes: PositionEncodingIndexes = position_encoding_indexes
         self.cached_input_indexes: List[torch.Tensor] = []
+        if position_encoding_method == "baseline":
+            self.position_encoding_indexes = BaselinePositionEncodingIndexes()
+        elif position_encoding_method == "continues":
+            self.position_encoding_indexes = ContinuesPositionEncodingIndexes()
+        elif position_encoding_method == "gapped":
+            self.position_encoding_indexes = GappedPositionEncodingIndexes()
+        elif position_encoding_method == "relative":
+            self.position_encoding_indexes = RelativePositionEncodingIndexes()
+        elif position_encoding_method == "gapped relative":
+            self.position_encoding_indexes = GappedRelativePositionEncodingIndexes()
+        elif position_encoding_method == "sink-relative-window":
+            self.position_encoding_indexes = SinkRelativeWindowPositionEncodingIndexes()
+        elif position_encoding_method == "non-linear":
+            self.position_encoding_indexes = NonLinearPositionEncodingIndexes()
+        else:
+            raise Exception(f"Unknown position encoding method: {position_encoding_method}")
 
     def get_seq_length(self, layer_idx: Optional[int] = 0) -> int:
         """Returns the sequence length of the cached states. A layer index can be optionally passed."""
