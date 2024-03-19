@@ -11,8 +11,7 @@ from .utils import apply_rotary_pos_emb, get_positional_encoding_indexes
 from transformers.models.llama.modeling_llama import repeat_kv
 
 
-# LLAMA_CONTEXT_LIMIT = 4096
-LLAMA_CONTEXT_LIMIT = 64
+LLAMA_CONTEXT_LIMIT = 4096
 
 
 def tova_llama_attention_forward(
