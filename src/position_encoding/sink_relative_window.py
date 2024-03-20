@@ -46,4 +46,4 @@ class SinkRelativeWindowPositionEncodingIndexes(PositionEncodingIndexes):
             p_j_minus1 = p_j_bottom if j == 0 else relative_center[j - 1]
             p_j = max([math.ceil(p_j_tag), p_j_minus1 + gap_j])
             relative_center.append(p_j)
-        return torch.tensor(relative_center)
+        return torch.tensor(relative_center).to("cuda")

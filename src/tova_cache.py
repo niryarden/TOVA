@@ -26,7 +26,7 @@ class TOVACache(DynamicCache):
             self.position_encoding_indexes = GappedPositionEncodingIndexes()
         elif position_encoding_method == "relative":
             self.position_encoding_indexes = RelativePositionEncodingIndexes()
-        elif position_encoding_method == "gapped relative":
+        elif position_encoding_method == "gapped-relative":
             self.position_encoding_indexes = GappedRelativePositionEncodingIndexes()
         elif position_encoding_method == "sink-relative-window":
             self.position_encoding_indexes = SinkRelativeWindowPositionEncodingIndexes()
