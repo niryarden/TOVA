@@ -20,8 +20,8 @@ class TOVACache(DynamicCache):
         self.cached_input_indexes: List[torch.Tensor] = []
         if position_encoding_method == "baseline":
             self.position_encoding_indexes = BaselinePositionEncodingIndexes()
-        elif position_encoding_method == "continues":
-            self.position_encoding_indexes = ContinuesPositionEncodingIndexes()
+        elif position_encoding_method == "continuous":
+            self.position_encoding_indexes = ContinuousPositionEncodingIndexes()
         elif position_encoding_method == "gapped":
             self.position_encoding_indexes = GappedPositionEncodingIndexes()
         elif position_encoding_method == "relative":
