@@ -21,8 +21,8 @@ class SinkRelativeWindowPositionEncodingIndexes(PositionEncodingIndexes):
 
     def calc_window(self, cached_indexes, N):
         M = cached_indexes.shape[0]
-        r = cached_indexes[-1] - M
-        window_mask = cached_indexes > r
+        R = cached_indexes[-1] - M
+        window_mask = cached_indexes > R
         window = cached_indexes[window_mask]
         shifted_window = window - (cached_indexes[-1] - (N - 1))
         return shifted_window

@@ -3,12 +3,12 @@ import math
 from TOVA.src.position_encoding.position_encoding_indexes import PositionEncodingIndexes
 
 
-K = 10
+T = 10
 
 def g(x):
-    if x <= K:
+    if x <= T:
         return x
-    return K + math.sqrt(x - K)
+    return T + math.sqrt(x - T)
 
 
 class NonLinearPositionEncodingIndexes(PositionEncodingIndexes):
@@ -21,4 +21,4 @@ class NonLinearPositionEncodingIndexes(PositionEncodingIndexes):
             p_j_minus1 = 0 if j == 0 else positions[j - 1]
             p_j = p_j_minus1 + math.ceil(g(i_j - i_j_minus1))
             positions.append(p_j)
-        return torch.tensor(positions, dtype=torch.int64)
+        return torch.tensor(positions, dtype=torch.int64).to("cuda")
