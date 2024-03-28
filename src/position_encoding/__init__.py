@@ -5,4 +5,6 @@ from TOVA.src.position_encoding.gapped import GappedPositionEncodingIndexes
 from TOVA.src.position_encoding.relative import RelativePositionEncodingIndexes
 from TOVA.src.position_encoding.gapped_relative import GappedRelativePositionEncodingIndexes
 from TOVA.src.position_encoding.sink_relative_window import SinkRelativeWindowPositionEncodingIndexes
+from TOVA.src.position_encoding.sink_relative2_window import SinkRelative2WindowPositionEncodingIndexes
+from TOVA.src.position_encoding.sink_nonlinear_window import SinkNonlinearWindowPositionEncodingIndexes
 from TOVA.src.position_encoding.non_linear import NonLinearPositionEncodingIndexes

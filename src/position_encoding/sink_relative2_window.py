@@ -2,11 +2,9 @@ import math
 import torch
 from TOVA.src.position_encoding.position_encoding_indexes import PositionEncodingIndexes
 
-class SinkRelativeWindowPositionEncodingIndexes(PositionEncodingIndexes):
-    def __init__(self, K: int = 20) -> None:
-        super().__init__()
-        self.K = K
-    
+K = 20
+
+class SinkRelative2WindowPositionEncodingIndexes(PositionEncodingIndexes):
     def get_position_indexes(self, past_key_value, layer_idx, context_limit):
         cached_indexes = past_key_value.cached_input_indexes[layer_idx]
         sink = self.calc_sink(cached_indexes)
@@ -17,13 +15,13 @@ class SinkRelativeWindowPositionEncodingIndexes(PositionEncodingIndexes):
 
 
     def calc_sink(self, cached_indexes):
-        sink_mask = cached_indexes < self.K
+        sink_mask = cached_indexes < K
         sink = cached_indexes[sink_mask]
         return sink
 
     def calc_window(self, cached_indexes, N):
         M = cached_indexes.shape[0]
-        R = cached_indexes[-1].item() - M
+        R = cached_indexes[-1] - M
         window_mask = cached_indexes > R
         window = cached_indexes[window_mask]
         shifted_window = window - (cached_indexes[-1] - (N - 1))
@@ -43,11 +41,7 @@ class SinkRelativeWindowPositionEncodingIndexes(PositionEncodingIndexes):
         relative_center = []
         # please note the j by -j_bottom is shifted in comparison to definition
         for j in range(center.shape[0]):
-            i_j_minus1 = p_j_bottom if j == 0 else center[j - 1].item()
             i_j = center[j].item()
-            p_j_tag = p_j_bottom + i_j * (p_j_top - p_j_bottom) / (i_j_top - i_j_bottom)
-            gap_j = 1 if i_j == i_j_minus1 + 1 else 2
-            p_j_minus1 = p_j_bottom if j == 0 else relative_center[j - 1]
-            p_j = max([math.ceil(p_j_tag), p_j_minus1 + gap_j])
+            p_j = math.ceil(p_j_bottom + i_j * (p_j_top - p_j_bottom) / (i_j_top - i_j_bottom))
             relative_center.append(p_j)
         return torch.tensor(relative_center).to("cuda" if torch.cuda.is_available() else "cpu")

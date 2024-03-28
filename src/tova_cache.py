@@ -1,4 +1,5 @@
 from typing import Any, Dict, List, Optional, Tuple
+import math
 
 import torch
 from transformers.cache_utils import DynamicCache
@@ -13,7 +14,8 @@ class TOVACache(DynamicCache):
 
     def __init__(self,
                  cache_size: int,
-                 position_encoding_method: str = "baseline"
+                 position_encoding_method: str = "baseline",
+                 K: int = 20
                  ):
         super().__init__()
         self.cache_size = cache_size
@@ -29,9 +31,37 @@ class TOVACache(DynamicCache):
         elif position_encoding_method == "gapped-relative":
             self.position_encoding_indexes = GappedRelativePositionEncodingIndexes()
         elif position_encoding_method == "sink-relative-window":
-            self.position_encoding_indexes = SinkRelativeWindowPositionEncodingIndexes()
-        elif position_encoding_method == "non-linear":
+            self.position_encoding_indexes = SinkRelativeWindowPositionEncodingIndexes(K=K)
+        elif position_encoding_method == "sink-relative2-window":
+            self.position_encoding_indexes = SinkRelative2WindowPositionEncodingIndexes()
+        elif position_encoding_method == "sink-nonlinear-window":
+            self.position_encoding_indexes = SinkNonlinearWindowPositionEncodingIndexes()
+        elif position_encoding_method == "nonlinear":
             self.position_encoding_indexes = NonLinearPositionEncodingIndexes()
+        elif position_encoding_method == "nonlinear-sqrt-ln":
+            self.position_encoding_indexes = NonLinearPositionEncodingIndexes(f=lambda x: math.sqrt(x) * math.log(x))
+        elif position_encoding_method == "nonlinear-fifth":
+            self.position_encoding_indexes = NonLinearPositionEncodingIndexes(f=lambda x: x / 5)
+        elif position_encoding_method == "nonlinear-tenth":
+            self.position_encoding_indexes = NonLinearPositionEncodingIndexes(f=lambda x: x / 10)
+        elif position_encoding_method == "nonlinear-sqrt":
+            self.position_encoding_indexes = NonLinearPositionEncodingIndexes(f=math.sqrt)
+        elif position_encoding_method == "nonlinear-ln":
+            self.position_encoding_indexes = NonLinearPositionEncodingIndexes(f=math.log)
+        elif position_encoding_method == "nonlinear-cbrt":
+            self.position_encoding_indexes = NonLinearPositionEncodingIndexes(f=lambda x: math.pow(x, 1/3))
+        elif position_encoding_method == "nonlinear-4rt":
+            self.position_encoding_indexes = NonLinearPositionEncodingIndexes(f=lambda x: math.pow(x, 1/4))
+        elif position_encoding_method == "nonlinear-lnln":
+            self.position_encoding_indexes = NonLinearPositionEncodingIndexes(f=lambda x: math.log(math.log(x)))
+        elif position_encoding_method == "nonlinear-5":
+            self.position_encoding_indexes = NonLinearPositionEncodingIndexes(T=5)
+        elif position_encoding_method == "nonlinear-8":
+            self.position_encoding_indexes = NonLinearPositionEncodingIndexes(T=8)
+        elif position_encoding_method == "nonlinear-15":
+            self.position_encoding_indexes = NonLinearPositionEncodingIndexes(T=15)
+        elif position_encoding_method == "nonlinear-20":
+            self.position_encoding_indexes = NonLinearPositionEncodingIndexes(T=20)
         else:
             raise Exception(f"Unknown position encoding method: {position_encoding_method}")
 
